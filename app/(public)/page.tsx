@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -14,7 +13,6 @@ import { SectionHeading } from "@/components/public/section-heading";
 import { Button } from "@/components/ui/button";
 import { listPublishedPosts } from "@/lib/services/posts";
 import { getSiteSettings } from "@/lib/services/settings";
-import { listMedia } from "@/lib/services/media";
 
 export const dynamic = "force-dynamic";
 
@@ -37,10 +35,9 @@ const values = [
 ];
 
 export default async function HomePage() {
-  const [settings, recentPosts, gallery] = await Promise.all([
+  const [settings, recentPosts] = await Promise.all([
     getSiteSettings(),
     listPublishedPosts({ perPage: 3 }).catch(() => ({ items: [] })),
-    listMedia({ perPage: 6 }).catch(() => ({ items: [] })),
   ]);
 
   const lodgeTitle = `${settings.lodgeName}${
@@ -194,35 +191,6 @@ export default async function HomePage() {
           </p>
         )}
       </section>
-
-      {/* Galeria */}
-      {gallery.items.length > 0 && (
-        <section className="border-t border-slate-100 bg-slate-50">
-          <div className="container-page py-20">
-            <SectionHeading
-              align="center"
-              eyebrow="Galeria"
-              title="Registros da nossa Loja"
-            />
-            <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3">
-              {gallery.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="relative aspect-[4/3] overflow-hidden rounded-lg border border-slate-200 bg-white"
-                >
-                  <Image
-                    src={item.secureUrl}
-                    alt={item.alt || "Imagem institucional"}
-                    fill
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* CTA */}
       <section className="container-page py-20">
