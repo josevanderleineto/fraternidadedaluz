@@ -1,0 +1,208 @@
+// Schema do banco de dados — Loja Fraternidade da Luz nº 181
+// PostgreSQL + Prisma ORM
+//
+// Modelo de dados que sustenta o site institucional e o painel administrativo.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Perfis de acesso do painel administrativo.
+enum Role {
+  ADMIN /// acesso total, inclusive usuários e configurações
+  EDITOR /// cria e edita conteúdo, sem acesso a usuários/configurações sensíveis
+}
+
+/// Status editorial de uma publicação.
+enum PostStatus {
+  DRAFT /// rascunho, nunca visível publicamente
+  PUBLISHED /// publicado, visível publicamente
+  SCHEDULED /// agendado, publica automaticamente na data
+}
+
+/// Usuários administrativos. Nunca há cadastro público de administradores.
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(EDITOR)
+  active       Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  posts        Post[]        @relation("PostAuthor")
+  pagesUpdated Page[]        @relation("PageUpdatedBy")
+  media        Media[]
+  auditLogs    AuditLog[]
+
+  @@index([email])
+  @@map("users")
+}
+
+/// Páginas institucionais editáveis (Sobre, Política de Privacidade, etc.).
+model Page {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  content         String   @db.Text
+  metaTitle       String?
+  metaDescription String?
+  published       Boolean  @default(false)
+  publishedAt     DateTime?
+  showInMenu      Boolean  @default(false)
+  menuOrder       Int      @default(0)
+  updatedById     String?
+  updatedBy       User?    @relation("PageUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([slug])
+  @@index([published])
+  @@map("pages")
+}
+
+/// Categorias do blog.
+model Category {
+  id          String         @id @default(cuid())
+  name        String
+  slug        String         @unique
+  description String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  posts PostCategory[]
+
+  @@index([slug])
+  @@map("categories")
+}
+
+/// Publicações do blog.
+model Post {
+  id              String     @id @default(cuid())
+  title           String
+  slug            String     @unique
+  excerpt         String?
+  content         String     @db.Text
+  coverImageUrl   String?
+  coverImageAlt   String?
+  keywords        String?
+  status          PostStatus @default(DRAFT)
+  publishedAt     DateTime?
+  authorId        String?
+  author          User?      @relation("PostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  categories PostCategory[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+  @@map("posts")
+}
+
+/// Relacionamento N:N entre publicações e categorias.
+model PostCategory {
+  id         String   @id @default(cuid())
+  postId     String
+  categoryId String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([postId, categoryId])
+  @@index([postId])
+  @@index([categoryId])
+  @@map("post_categories")
+}
+
+/// Metadados dos arquivos (imagens) enviados para o armazenamento externo.
+model Media {
+  id           String   @id @default(cuid())
+  url          String
+  secureUrl    String
+  publicId     String   @unique
+  format       String?
+  resourceType String   @default("image")
+  width        Int?
+  height       Int?
+  bytes        Int?
+  originalName String?
+  alt          String?
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@index([publicId])
+  @@map("media")
+}
+
+/// Configurações institucionais (registro único).
+model SiteSettings {
+  id              String   @id @default("singleton")
+  siteName        String   @default("Loja Fraternidade da Luz nº 181")
+  lodgeName       String   @default("Loja Fraternidade da Luz")
+  lodgeNumber     String   @default("181")
+  jurisdictionName String  @default("Grande Loja do Estado da Bahia")
+  logoUrl         String?
+  logoPublicId    String?
+  description     String?
+  shortAbout      String?
+  address         String?
+  email           String?
+  phone           String?
+  whatsapp        String?
+  facebookUrl     String?
+  instagramUrl    String?
+  youtubeUrl      String?
+  footerText      String?
+  metaTitle       String?
+  metaDescription String?
+  updatedAt       DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+/// Mensagens recebidas pelo formulário público de contato.
+model ContactMessage {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String    @db.Text
+  isRead    Boolean   @default(false)
+  isReplied Boolean   @default(false)
+  readAt    DateTime?
+  repliedAt DateTime?
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+/// Registro de ações administrativas relevantes.
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

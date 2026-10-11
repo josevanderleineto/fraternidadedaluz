@@ -1,26 +1,162 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* =============================================================================
+ * Identidade visual — Loja Fraternidade da Luz nº 181
+ * Fundo claro, azul-marinho profundo (institucional) e dourado discreto.
+ * ========================================================================== */
+
+@theme {
+  /* Azul-marinho institucional */
+  --color-brand-50: #f2f6fc;
+  --color-brand-100: #e3ecf8;
+  --color-brand-200: #c6d8ef;
+  --color-brand-300: #9db9e0;
+  --color-brand-400: #6d92cc;
+  --color-brand-500: #4a71b6;
+  --color-brand-600: #38579a;
+  --color-brand-700: #2f457c;
+  --color-brand-800: #2a3a66;
+  --color-brand-900: #1b2a4a;
+  --color-brand-950: #0f1a31;
+
+  /* Dourado discreto */
+  --color-gold-50: #fdfaf0;
+  --color-gold-100: #faf1d6;
+  --color-gold-200: #f3dfa6;
+  --color-gold-300: #e9c66f;
+  --color-gold-400: #dfae45;
+  --color-gold-500: #c9962a;
+  --color-gold-600: #ab771f;
+  --color-gold-700: #89591c;
+  --color-gold-800: #71481e;
+  --color-gold-900: #603c1d;
+  --color-gold-950: #371f0b;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), ui-serif, Georgia, serif;
+
+  --radius: 0.5rem;
+}
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #14181f;
+  --muted: #f5f7fa;
+  --muted-foreground: #5b6675;
+  --border: #e4e8ee;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-900);
+    color: #fff;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  /* Animações suaves e discretas */
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.6s ease-out both;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out both;
+  }
+
+  .container-page {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-page {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Filete dourado decorativo */
+  .gold-rule {
+    height: 2px;
+    width: 4rem;
+    background: linear-gradient(
+      to right,
+      var(--color-gold-500),
+      var(--color-gold-300)
+    );
+  }
+}
+
+/* Conteúdo rico (blog/páginas) — ajustes de legibilidade */
+.prose-content {
+  @apply prose prose-slate max-w-none;
+}
+.prose-content h1,
+.prose-content h2,
+.prose-content h3 {
+  font-family: var(--font-display);
+}
+.prose-content a {
+  color: var(--color-brand-700);
+  text-decoration: underline;
+}
+.prose-content img {
+  border-radius: var(--radius);
 }
